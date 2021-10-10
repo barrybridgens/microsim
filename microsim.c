@@ -1,5 +1,6 @@
 /* Microsim - main file */
 
+#include <ctype.h>
 #include <stdio.h>
 
 #include "microsim_memory.h"
@@ -13,6 +14,7 @@
 int main(void);
 void init(void);
 void show_registers(void);
+void show_memory(u16 addr);
 void load_code(void);
 void fetch_and_execute(void);
 
@@ -42,19 +44,64 @@ void init()
 	/* Initialise registers */
 	acc = 0;
 	pc = 0x100;
+	sp = 0xFFFE;
 }
 
 void show_registers()
 {
-	printf("    acc = %d\n", acc);
-	printf("    pc = %d\n", pc);
+	printf("    acc = %x\n", acc);
+	printf("    pc = %x\n", pc);
+	printf("    sp = %x\n", sp);
+}
+
+void show_memory (u16 addr)
+{
+	u8 data[16];
+
+	for (int byte=0; byte<16; byte++)
+	{
+		printf("%08x: ",(int)addr);
+
+		for (int item=0; item<16; item++)
+		{
+			data[item] = m[addr];
+			printf("%02X ", data[item]);
+			addr++;
+		}
+
+		printf(" ");
+		for (int item=0; item<16; item++)
+		{
+			if (isprint(data[item]))
+			{
+				printf("%c", data[item]);
+			}
+			else
+			{
+				printf(".");
+			}
+		}
+
+		printf("\n");
+	}
 }
 
 void load_code()
 {
-	m[0x100] = LDA_I;
-	m[0x101] = 0x55;
-	m[0x102] = HALT;
+	u16 load_addr;
+
+	load_addr = 0x100;
+
+	/* load test data */
+	m[0x10] = 0xAA;
+
+	/* load test code */
+	m[load_addr++] = LDA_I;
+	m[load_addr++] = 0x55;
+	m[load_addr++] = LDA_M;
+	m[load_addr++] = 0x00;
+	m[load_addr++] = 0x10;
+	m[load_addr++] = HALT;
 }
 
 void fetch_and_execute()
@@ -75,7 +122,15 @@ void fetch_and_execute()
 				data = m[pc++];
 				acc = data;
 				#ifdef DEBUG
-				printf ("LDA_I %d\n", data);
+				printf ("LDA_I %x\n", data);
+				#endif
+				break;
+
+			case LDA_M:
+				addr = (m[pc++] * 256) + m[pc++];
+				acc = m[addr];
+				#ifdef DEBUG
+				printf ("LDA_m %x\n", addr);
 				#endif
 				break;
 
@@ -91,6 +146,7 @@ void fetch_and_execute()
 
 		#ifdef DEBUG
 		show_registers();
+		show_memory(0);
 		#endif
 	}
 }

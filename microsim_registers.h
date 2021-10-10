@@ -7,5 +7,6 @@
 
 u8 acc;
 u16 pc;
+u16 sp;
 
 #endif
