@@ -8,5 +8,10 @@
 u8 acc;
 u16 pc;
 u16 sp;
+u16 index;
+u8 flags;
+
+/* Flag bit patterns */
+#define ZERO_FLAG 1
 
 #endif
