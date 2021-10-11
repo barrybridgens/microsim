@@ -93,7 +93,8 @@ void load_code()
 	load_addr = 0x100;
 
 	/* load test data */
-	m[0x10] = 0xAA;
+	m[0x10] = 0x40;
+	m[0x11] = 0x33;
 
 	/* load test code */
 	m[load_addr++] = LDA_I;
@@ -103,9 +104,12 @@ void load_code()
 	m[load_addr++] = 0x10;
 	m[load_addr++] = ADD_I;
 	m[load_addr++] = 0x20;
+	m[load_addr++] = ADD_M;
+	m[load_addr++] = 0x00;
+	m[load_addr++] = 0x11;
 	m[load_addr++] = STA;
 	m[load_addr++] = 0x00;
-	m[load_addr++] = 0x12;
+	m[load_addr++] = 0x14;
 	m[load_addr++] = HALT;
 }
 
@@ -152,6 +156,14 @@ void fetch_and_execute()
 				acc = acc + data;
 				#ifdef DEBUG
 				printf ("ADD_I %x\n", data);
+				#endif
+				break;
+
+			case ADD_M:
+				addr = (m[pc++] * 256) + m[pc++];
+				acc = acc + m[addr];
+				#ifdef DEBUG
+				printf ("ADD_M %x\n", addr);
 				#endif
 				break;
 
