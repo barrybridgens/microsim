@@ -11,6 +11,7 @@
 #define INC      6   /* Increment accumulator */
 #define DEC      7   /* Decrement accumulator */
 #define BRNZ     8   /* Branch is not zero - data: data: memory addredata: memory offset high, memory offset low */
+#define OUT      9   /* Out the value in accumulator ie. store it in the char_out register */
 
 #define HALT    255  /* Stop execution */
 

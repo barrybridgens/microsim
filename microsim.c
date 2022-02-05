@@ -18,14 +18,13 @@ void show_memory(u16 addr);
 void load_code(void);
 void fetch_and_execute(void);
 void set_flags(u8 old_value, u8 new_value);
+void perform_io(void);
 
 int main()
 {
 	printf("Microsim v0.1\n\n");
 
 	init();
-
-	show_registers();
 
 	load_code();
 
@@ -47,6 +46,8 @@ void init()
 	pc = 0x100;
 	sp = 0xFFFE;
 	index = 0;
+
+	char_out = 0xFF;
 }
 
 void show_registers()
@@ -55,6 +56,7 @@ void show_registers()
 	printf("    pc = %x\n", pc);
 	printf("    sp = %x\n", sp);
 	printf("    flags = %x\n", flags);
+	printf("	char_out = %x\n", char_out);
 }
 
 void show_memory (u16 addr)
@@ -116,12 +118,25 @@ void load_code()
 	m[load_addr++] = LDA_I;
 	m[load_addr++] = 0x00;*/
 
+	/* Loop test */
 	m[load_addr++] = LDA_I;
 	m[load_addr++] = 0x04;
 	m[load_addr++] = DEC;
 	m[load_addr++] = BRNZ;
 	m[load_addr++] = 0xFF;
 	m[load_addr++] = 0xFF;
+
+	
+	/* IO test */
+	m[load_addr++] = LDA_I;
+	m[load_addr++] = 0x41;
+	m[load_addr++] = OUT;
+	m[load_addr++] = LDA_I;
+	m[load_addr++] = 0x42;
+	m[load_addr++] = OUT;
+	m[load_addr++] = LDA_I;
+	m[load_addr++] = 0x43;
+	m[load_addr++] = OUT;
 
 	m[load_addr++] = HALT;
 }
@@ -137,6 +152,16 @@ void set_flags(u8 old_value, u8 new_value)
 	{
 		flags = flags & ~ZERO_FLAG;
 	}
+}
+
+void perform_io()
+{
+  /* Simulate IO */
+  if (char_out != 0xFF)
+    {
+      putchar((char)char_out);
+      char_out = 0xFF;
+    }
 }
 
 void fetch_and_execute()
@@ -233,6 +258,13 @@ void fetch_and_execute()
 				#endif
 				break;
 
+			case OUT:
+				char_out = acc;
+				#ifdef DEBUG
+				printf ("OUT\n");
+				#endif
+				break;
+
 			case HALT:
 				#ifdef DEBUG
 				printf("*** HALT ***\n");
@@ -248,5 +280,7 @@ void fetch_and_execute()
 		show_registers();
 		show_memory(0);
 		#endif
+
+		perform_io();
 	}
 }
