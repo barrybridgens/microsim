@@ -55,6 +55,11 @@ void show_registers()
 	printf("    acc = %x\n", acc);
 	printf("    pc = %x\n", pc);
 	printf("    sp = %x\n", sp);
+	if (sp != 0xFFFE)
+	{
+		printf("          %x\n", m[sp+1]);
+		printf("          %x\n", m[sp+2]);
+	}
 	printf("    flags = %x\n", flags);
 	printf("    char_out = %x\n", char_out);
 }
@@ -133,7 +138,7 @@ void load_code()
 
 	
 	/* IO test */
-	m[load_addr++] = LDA_I;
+	m[load_addr++] = LDA_I; /* 109 */
 	m[load_addr++] = 0x41;
 	m[load_addr++] = OUT;
 	m[load_addr++] = LDA_I;
@@ -143,7 +148,23 @@ void load_code()
 	m[load_addr++] = 0x43;
 	m[load_addr++] = OUT;
 
+	m[load_addr++] = JSR; /* 112 */
+	m[load_addr++] = 0x01;
+	m[load_addr++] = 0x16;
+
 	m[load_addr++] = HALT;
+
+	/* Sub routine */
+	m[load_addr++] = LDA_I; /* 116 */
+	m[load_addr++] = 0x45;
+	m[load_addr++] = OUT;
+	m[load_addr++] = LDA_I;
+	m[load_addr++] = 0x46;
+	m[load_addr++] = OUT;
+	m[load_addr++] = LDA_I;
+	m[load_addr++] = 0x47;
+	m[load_addr++] = OUT;
+	m[load_addr++] = RET;
 }
 
 void set_flags(u8 old_value, u8 new_value)
@@ -276,6 +297,25 @@ void fetch_and_execute()
 				pc = addr;
 				#ifdef DEBUG
 				printf ("JMP %x\n", addr);
+				#endif
+				break;
+
+			case JSR:
+				addr = (m[pc++] * 256) + m[pc++];
+				m[sp--] = pc / 256;
+				m[sp--] = pc & 0xFF;
+				pc = addr;
+				#ifdef DEBUG
+				printf ("JSR %x\n", addr);
+				#endif
+				break;
+
+			case RET:
+				addr = m[++sp];
+				addr = addr + (m[++sp] * 256);
+				pc = addr;
+				#ifdef DEBUG
+				printf ("RET\n");
 				#endif
 				break;
 

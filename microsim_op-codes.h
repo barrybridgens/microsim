@@ -13,6 +13,8 @@
 #define BRNZ     8   /* Branch is not zero - data: data: memory addredata: memory offset high, memory offset low */
 #define OUT      9   /* Out the value in accumulator ie. store it in the char_out register */
 #define JMP      10  /* Set program counter to the given address - data: memory address high, memory address low */
+#define JSR      11  /* Push PC to stack, set program counter to the given address - data: memory address high, memory address low */
+#define RET      12  /* Pull value from stack, put value into PC */
 
 #define HALT    255  /* Stop execution */
 
