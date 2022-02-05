@@ -12,6 +12,7 @@
 #define DEC      7   /* Decrement accumulator */
 #define BRNZ     8   /* Branch is not zero - data: data: memory addredata: memory offset high, memory offset low */
 #define OUT      9   /* Out the value in accumulator ie. store it in the char_out register */
+#define JMP      10  /* Set program counter to the given address - data: memory address high, memory address low */
 
 #define HALT    255  /* Stop execution */
 

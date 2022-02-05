@@ -56,7 +56,7 @@ void show_registers()
 	printf("    pc = %x\n", pc);
 	printf("    sp = %x\n", sp);
 	printf("    flags = %x\n", flags);
-	printf("	char_out = %x\n", char_out);
+	printf("    char_out = %x\n", char_out);
 }
 
 void show_memory (u16 addr)
@@ -118,6 +118,11 @@ void load_code()
 	m[load_addr++] = LDA_I;
 	m[load_addr++] = 0x00;*/
 
+	/* JMP test */
+	m[load_addr++] = JMP;
+	m[load_addr++] = 0x01;
+	m[load_addr++] = 0x09;
+
 	/* Loop test */
 	m[load_addr++] = LDA_I;
 	m[load_addr++] = 0x04;
@@ -169,6 +174,7 @@ void fetch_and_execute()
 	u8 op;
 	u8 data;
 	u16 addr;
+	u16 offset;
 	u8 old_acc;
 
 	op = 0;
@@ -248,13 +254,13 @@ void fetch_and_execute()
 				break;
 
 			case BRNZ:
-				addr = (m[pc++] * 256) + m[pc++];
+				offset = (m[pc++] * 256) + m[pc++];
 				if ((flags & ZERO_FLAG) != ZERO_FLAG)
 				{
-					pc = ((pc + addr) & 0xFFFF) - 3;
+					pc = ((pc + offset) & 0xFFFF) - 3;
 				}
 				#ifdef DEBUG
-				printf ("BRNZ %x\n", addr);
+				printf ("BRNZ %x\n", offset);
 				#endif
 				break;
 
@@ -262,6 +268,14 @@ void fetch_and_execute()
 				char_out = acc;
 				#ifdef DEBUG
 				printf ("OUT\n");
+				#endif
+				break;
+
+			case JMP:
+				addr = (m[pc++] * 256) + m[pc++];
+				pc = addr;
+				#ifdef DEBUG
+				printf ("JMP %x\n", addr);
 				#endif
 				break;
 
