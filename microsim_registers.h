@@ -8,7 +8,7 @@
 u8 acc;
 u16 pc;
 u16 sp;
-u16 index;
+u16 ix;
 u8 flags;
 
 u8 char_out;

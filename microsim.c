@@ -22,319 +22,421 @@ void perform_io(void);
 
 int main()
 {
-	printf("Microsim v0.1\n\n");
+  printf("Microsim v0.1\n\n");
 
-	init();
+  init();
 
-	load_code();
+  load_code();
 
-	fetch_and_execute();
+  fetch_and_execute();
 
-	return(1);
+  return(1);
 }
 
 void init()
 {
-	/* Zero all memory */
-	for (u32 cell=0; cell<MEMORY_SIZE; cell++)
-	{
-		m[cell] = 0;
-	}
+  /* Zero all memory */
+  for (u32 cell=0; cell<MEMORY_SIZE; cell++)
+  {
+    m[cell] = 0;
+  }
 
-	/* Initialise registers */
-	acc = 0;
-	pc = 0x100;
-	sp = 0xFFFE;
-	index = 0;
+  /* Initialise registers */
+  acc = 0;
+  pc = 0x100;
+  sp = 0xFFFE;
+  ix = 0;
 
-	char_out = 0xFF;
+  char_out = 0xFF;
 }
 
 void show_registers()
 {
-	printf("    acc = %x\n", acc);
-	printf("    pc = %x\n", pc);
-	printf("    sp = %x\n", sp);
-	if (sp != 0xFFFE)
-	{
-		printf("          %x\n", m[sp+1]);
-		printf("          %x\n", m[sp+2]);
-	}
-	printf("    flags = %x\n", flags);
-	printf("    char_out = %x\n", char_out);
+  printf("    acc = %x\n", acc);
+  printf("    pc = %x\n", pc);
+  printf("    ix = %x\n", ix);
+  printf("    sp = %x\n", sp);
+  if (sp != 0xFFFE)
+  {
+    printf("          %x\n", m[sp+1]);
+    printf("          %x\n", m[sp+2]);
+  }
+  printf("    flags = %x\n", flags);
+  printf("    char_out = %x\n", char_out);
 }
 
 void show_memory (u16 addr)
 {
-	u8 data[16];
+  u8 data[16];
 
-	for (int byte=0; byte<16; byte++)
-	{
-		printf("%08x: ",(int)addr);
+  for (int byte=0; byte<16; byte++)
+  {
+    printf("%08x: ",(int)addr);
 
-		for (int item=0; item<16; item++)
-		{
-			data[item] = m[addr];
-			printf("%02X ", data[item]);
-			addr++;
-		}
+    for (int item=0; item<16; item++)
+    {
+      data[item] = m[addr];
+      printf("%02X ", data[item]);
+      addr++;
+    }
 
-		printf(" ");
-		for (int item=0; item<16; item++)
-		{
-			if (isprint(data[item]))
-			{
-				printf("%c", data[item]);
-			}
-			else
-			{
-				printf(".");
-			}
-		}
+    printf(" ");
+    for (int item=0; item<16; item++)
+    {
+      if (isprint(data[item]))
+      {
+	printf("%c", data[item]);
+      }
+      else
+      {
+	printf(".");
+      }
+    }
 
-		printf("\n");
-	}
+    printf("\n");
+  }
 }
 
 void load_code()
 {
-	u16 load_addr;
+  u16 load_addr;
 
-	load_addr = 0x100;
+  load_addr = 0x100;
 
-	/* load test data */
-	m[0x10] = 0x40;
-	m[0x11] = 0x33;
+  /* load test data */
+  m[0x10] = 0x40;
+  m[0x11] = 0x33;
+  m[0x14] = 0x42;
+  m[0x20] = 0x00;
+  m[0x21] = 0x30;
 
-	/* load test code */
-	/*m[load_addr++] = LDA_I;
-	m[load_addr++] = 0x55;
-	m[load_addr++] = LDA_M;
-	m[load_addr++] = 0x00;
-	m[load_addr++] = 0x10;
-	m[load_addr++] = ADD_I;
-	m[load_addr++] = 0x20;
-	m[load_addr++] = ADD_M;
-	m[load_addr++] = 0x00;
-	m[load_addr++] = 0x11;
-	m[load_addr++] = STA;
-	m[load_addr++] = 0x00;
-	m[load_addr++] = 0x14;
-	m[load_addr++] = LDA_I;
-	m[load_addr++] = 0x00;*/
+  /* load test code */
+  /*m[load_addr++] = LDA_I;
+    m[load_addr++] = 0x55;
+    m[load_addr++] = LDA_M;
+    m[load_addr++] = 0x00;
+    m[load_addr++] = 0x10;
+    m[load_addr++] = ADD_I;
+    m[load_addr++] = 0x20;
+    m[load_addr++] = ADD_M;
+    m[load_addr++] = 0x00;
+    m[load_addr++] = 0x11;
+    m[load_addr++] = STA;
+    m[load_addr++] = 0x00;
+    m[load_addr++] = 0x14;
+    m[load_addr++] = LDA_I;
+    m[load_addr++] = 0x00;*/
 
-	/* JMP test */
-	m[load_addr++] = JMP;
-	m[load_addr++] = 0x01;
-	m[load_addr++] = 0x09;
+  /* index register tests */
 
-	/* Loop test */
-	m[load_addr++] = LDA_I;
-	m[load_addr++] = 0x04;
-	m[load_addr++] = DEC;
-	m[load_addr++] = BRNZ;
-	m[load_addr++] = 0xFF;
-	m[load_addr++] = 0xFF;
+  m[load_addr++] = LDI_I;
+  m[load_addr++] = 0x00;
+  m[load_addr++] = 0x10;
+  m[load_addr++] = LDAI;
+  m[load_addr++] = INCI;
+  m[load_addr++] = LDAI;
+  m[load_addr++] = INCI;
+  m[load_addr++] = STAI;
+  m[load_addr++] = DECI;
+  m[load_addr++] = LDAIO;
+  m[load_addr++] = 0x03;
+  m[load_addr++] = STAIO;
+  m[load_addr++] = 0x05;
+  m[load_addr++] = LDI_M;
+  m[load_addr++] = 0x00;
+  m[load_addr++] = 0x20;
+  
+
+  m[load_addr++] = HALT;
+
+  /* JMP test */
+  m[load_addr++] = JMP;
+  m[load_addr++] = 0x01;
+  m[load_addr++] = 0x09;
+
+  /* Loop test */
+  m[load_addr++] = LDA_I;
+  m[load_addr++] = 0x04;
+  m[load_addr++] = DEC;
+  m[load_addr++] = BRNZ;
+  m[load_addr++] = 0xFF;
+  m[load_addr++] = 0xFF;
 
 	
-	/* IO test */
-	m[load_addr++] = LDA_I; /* 109 */
-	m[load_addr++] = 0x41;
-	m[load_addr++] = OUT;
-	m[load_addr++] = LDA_I;
-	m[load_addr++] = 0x42;
-	m[load_addr++] = OUT;
-	m[load_addr++] = LDA_I;
-	m[load_addr++] = 0x43;
-	m[load_addr++] = OUT;
+  /* IO test */
+  m[load_addr++] = LDA_I; /* 109 */
+  m[load_addr++] = 0x41;
+  m[load_addr++] = OUT;
+  m[load_addr++] = LDA_I;
+  m[load_addr++] = 0x42;
+  m[load_addr++] = OUT;
+  m[load_addr++] = LDA_I;
+  m[load_addr++] = 0x43;
+  m[load_addr++] = OUT;
 
-	m[load_addr++] = JSR; /* 112 */
-	m[load_addr++] = 0x01;
-	m[load_addr++] = 0x16;
+  m[load_addr++] = JSR; /* 112 */
+  m[load_addr++] = 0x01;
+  m[load_addr++] = 0x16;
 
-	m[load_addr++] = HALT;
+  m[load_addr++] = HALT;
 
-	/* Sub routine */
-	m[load_addr++] = LDA_I; /* 116 */
-	m[load_addr++] = 0x45;
-	m[load_addr++] = OUT;
-	m[load_addr++] = LDA_I;
-	m[load_addr++] = 0x46;
-	m[load_addr++] = OUT;
-	m[load_addr++] = LDA_I;
-	m[load_addr++] = 0x47;
-	m[load_addr++] = OUT;
-	m[load_addr++] = RET;
+  /* Sub routine */
+  m[load_addr++] = LDA_I; /* 116 */
+  m[load_addr++] = 0x45;
+  m[load_addr++] = OUT;
+  m[load_addr++] = LDA_I;
+  m[load_addr++] = 0x46;
+  m[load_addr++] = OUT;
+  m[load_addr++] = LDA_I;
+  m[load_addr++] = 0x47;
+  m[load_addr++] = OUT;
+  m[load_addr++] = RET;
 }
 
 void set_flags(u8 old_value, u8 new_value)
 {
-	/* Zero Flag */
-	if (new_value == 0)
-	{
-		flags = flags | ZERO_FLAG;
-	}
-	else
-	{
-		flags = flags & ~ZERO_FLAG;
-	}
+  /* Zero Flag */
+  if (new_value == 0)
+  {
+    flags = flags | ZERO_FLAG;
+  }
+  else
+  {
+    flags = flags & ~ZERO_FLAG;
+  }
 }
 
 void perform_io()
 {
   /* Simulate IO */
   if (char_out != 0xFF)
-    {
-      putchar((char)char_out);
-      char_out = 0xFF;
-    }
+  {
+    putchar((char)char_out);
+    char_out = 0xFF;
+  }
 }
 
 void fetch_and_execute()
 {
-	u8 op;
-	u8 data;
-	u16 addr;
-	u16 offset;
-	u8 old_acc;
+  u8 op;
+  u8 data;
+  u16 data16;
+  u16 addr;
+  u16 offset;
+  u8 old_acc;
 
-	op = 0;
+  op = 0;
 
-	while (op != HALT)
-	{
-		op = m[pc++];
+  while (op != HALT)
+  {
+    op = m[pc++];
 
-		switch (op)
-		{
-			case LDA_I:
-				old_acc = acc;
-				data = m[pc++];
-				acc = data;
-				set_flags(old_acc, acc);
-				#ifdef DEBUG
-				printf ("LDA_I %x\n", data);
-				#endif
-				break;
+    switch (op)
+    {
+    case LDA_I:
+      old_acc = acc;
+      data = m[pc++];
+      acc = data;
+      set_flags(old_acc, acc);
+#ifdef DEBUG
+      printf ("LDA_I %x\n", data);
+#endif
+      break;
 
-			case LDA_M:
-				old_acc = acc;
-				addr = (m[pc++] * 256) + m[pc++];
-				acc = m[addr];
-				set_flags(old_acc, acc);
-				#ifdef DEBUG
-				printf ("LDA_M %x\n", addr);
-				#endif
-				break;
+    case LDA_M:
+      old_acc = acc;
+      addr = (m[pc++] * 256) + m[pc++];
+      acc = m[addr];
+      set_flags(old_acc, acc);
+#ifdef DEBUG
+      printf ("LDA_M %x\n", addr);
+#endif
+      break;
 
-			case STA:
-				old_acc = acc;
-				addr = (m[pc++] * 256) + m[pc++];
-				m[addr] = acc;
-				set_flags(old_acc, acc);
-				#ifdef DEBUG
-				printf ("STA %x\n", addr);
-				#endif
-				break;
+    case STA:
+      old_acc = acc;
+      addr = (m[pc++] * 256) + m[pc++];
+      m[addr] = acc;
+      set_flags(old_acc, acc);
+#ifdef DEBUG
+      printf ("STA %x\n", addr);
+#endif
+      break;
 
-			case ADD_I:
-				old_acc = acc;
-				data = m[pc++];
-				acc = acc + data;
-				set_flags(old_acc, acc);
-				#ifdef DEBUG
-				printf ("ADD_I %x\n", data);
-				#endif
-				break;
+    case ADD_I:
+      old_acc = acc;
+      data = m[pc++];
+      acc = acc + data;
+      set_flags(old_acc, acc);
+#ifdef DEBUG
+      printf ("ADD_I %x\n", data);
+#endif
+      break;
 
-			case ADD_M:
-				old_acc = acc;
-				addr = (m[pc++] * 256) + m[pc++];
-				acc = acc + m[addr];
-				set_flags(old_acc, acc);
-				#ifdef DEBUG
-				printf ("ADD_M %x\n", addr);
-				#endif
-				break;
+    case ADD_M:
+      old_acc = acc;
+      addr = (m[pc++] * 256) + m[pc++];
+      acc = acc + m[addr];
+      set_flags(old_acc, acc);
+#ifdef DEBUG
+      printf ("ADD_M %x\n", addr);
+#endif
+      break;
 
-			case INC:
-				old_acc = acc;
-				acc++;
-				set_flags(old_acc, acc);
-				#ifdef DEBUG
-				printf ("INC\n");
-				#endif
-				break;
+    case INC:
+      old_acc = acc;
+      acc++;
+      set_flags(old_acc, acc);
+#ifdef DEBUG
+      printf ("INC\n");
+#endif
+      break;
 
-			case DEC:
-				old_acc = acc;
-				acc--;
-				set_flags(old_acc, acc);
-				#ifdef DEBUG
-				printf ("DEC\n");
-				#endif
-				break;
+    case DEC:
+      old_acc = acc;
+      acc--;
+      set_flags(old_acc, acc);
+#ifdef DEBUG
+      printf ("DEC\n");
+#endif
+      break;
 
-			case BRNZ:
-				offset = (m[pc++] * 256) + m[pc++];
-				if ((flags & ZERO_FLAG) != ZERO_FLAG)
-				{
-					pc = ((pc + offset) & 0xFFFF) - 3;
-				}
-				#ifdef DEBUG
-				printf ("BRNZ %x\n", offset);
-				#endif
-				break;
+    case BRNZ:
+      offset = (m[pc++] * 256) + m[pc++];
+      if ((flags & ZERO_FLAG) != ZERO_FLAG)
+      {
+	pc = ((pc + offset) & 0xFFFF) - 3;
+      }
+#ifdef DEBUG
+      printf ("BRNZ %x\n", offset);
+#endif
+      break;
 
-			case OUT:
-				char_out = acc;
-				#ifdef DEBUG
-				printf ("OUT\n");
-				#endif
-				break;
+    case OUT:
+      char_out = acc;
+#ifdef DEBUG
+      printf ("OUT\n");
+#endif
+      break;
 
-			case JMP:
-				addr = (m[pc++] * 256) + m[pc++];
-				pc = addr;
-				#ifdef DEBUG
-				printf ("JMP %x\n", addr);
-				#endif
-				break;
+    case JMP:
+      addr = (m[pc++] * 256) + m[pc++];
+      pc = addr;
+#ifdef DEBUG
+      printf ("JMP %x\n", addr);
+#endif
+      break;
 
-			case JSR:
-				addr = (m[pc++] * 256) + m[pc++];
-				m[sp--] = pc / 256;
-				m[sp--] = pc & 0xFF;
-				pc = addr;
-				#ifdef DEBUG
-				printf ("JSR %x\n", addr);
-				#endif
-				break;
+    case JSR:
+      addr = (m[pc++] * 256) + m[pc++];
+      m[sp--] = pc / 256;
+      m[sp--] = pc & 0xFF;
+      pc = addr;
+#ifdef DEBUG
+      printf ("JSR %x\n", addr);
+#endif
+      break;
 
-			case RET:
-				addr = m[++sp];
-				addr = addr + (m[++sp] * 256);
-				pc = addr;
-				#ifdef DEBUG
-				printf ("RET\n");
-				#endif
-				break;
+    case RET:
+      addr = m[++sp];
+      addr = addr + (m[++sp] * 256);
+      pc = addr;
+#ifdef DEBUG
+      printf ("RET\n");
+#endif
+      break;
+				
+    case LDI_I:
+      data16 = (m[pc++] * 256);
+      data16 = data16 + m[pc++];
+      ix = data16;
+#ifdef DEBUG
+      printf ("LDI_I %x\n", data16);
+#endif
+      break;
 
-			case HALT:
-				#ifdef DEBUG
-				printf("*** HALT ***\n");
-				#endif
-				break;
+    case LDI_M:
+      addr = (m[pc++] * 256) + m[pc++];
+      printf("xxxxx Address: %x\n", addr);
+      data16 = (m[addr] * 256);
+      data16 = data16 + m[addr + 1];
+      printf("xxxxx Data: %x\n", data16);
+      ix = data16;
+#ifdef DEBUG
+      printf ("LDI_M - %x\n", addr);
+#endif
+      break;
 
-			default:
-				/* Do nothing for now */
-				break;
-		}
+    case INCI:
+      ix++;
+#ifdef DEBUG
+      printf ("INCI\n");
+#endif
+      break;
 
-		#ifdef DEBUG
-		show_registers();
-		show_memory(0);
-		#endif
+    case DECI:
+      ix--;
+#ifdef DEBUG
+      printf ("DECI\n");
+#endif
+      break;
 
-		perform_io();
-	}
+    case LDAI:
+      old_acc = acc;
+      acc = m[ix];
+      set_flags(old_acc, acc);
+#ifdef DEBUG
+      printf ("LDAI\n");
+#endif
+      break;
+
+    case LDAIO:
+      data = m[pc++];
+      old_acc = acc;
+      acc = m[ix + data];
+      set_flags(old_acc, acc);
+#ifdef DEBUG
+      printf ("LDAI\n");
+#endif
+      break;
+      
+    case STAI:
+      old_acc = acc;
+      addr = ix;
+      m[addr] = acc;
+      set_flags(old_acc, acc);
+#ifdef DEBUG
+      printf ("STAI \n");
+#endif
+      break;
+
+    case STAIO:
+      data = m[pc++];
+      old_acc = acc;
+      addr = ix + data;
+      m[addr] = acc;
+      set_flags(old_acc, acc);
+#ifdef DEBUG
+      printf ("STAI \n");
+#endif
+      break;
+      
+    case HALT:
+#ifdef DEBUG
+      printf("*** HALT ***\n");
+#endif
+      break;
+
+    default:
+      /* Do nothing for now */
+      break;
+    }
+
+#ifdef DEBUG
+    show_registers();
+    show_memory(0);
+#endif
+
+    perform_io();
+  }
 }
