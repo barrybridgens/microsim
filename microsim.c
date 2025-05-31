@@ -20,6 +20,8 @@ void fetch_and_execute(void);
 void set_flags(u8 old_value, u8 new_value);
 void perform_io(void);
 
+
+
 int main()
 {
   printf("Microsim v0.1\n\n");
@@ -99,16 +101,36 @@ void show_memory (u16 addr)
 
 void load_code()
 {
-  u16 load_addr;
+  int load_addr;
+  int  data;
 
-  load_addr = 0x100;
+  FILE *fptr;
+
+  // Open obj file in read mode
+  fptr = fopen("test.obj", "r");
+
+  // Store the content of the file
+  char myString[100];
+
+  // Read the content and print it
+  while(fgets(myString, 100, fptr)) {
+    printf("%s", myString);
+    sscanf(myString, "%d %d", &load_addr, &data);
+    m[load_addr] = data;
+  }
+
+
+  // Close the file
+  fclose(fptr); 
+
+  
 
   /* load test data */
-  m[0x10] = 0x40;
+  /*m[0x10] = 0x40;
   m[0x11] = 0x33;
   m[0x14] = 0x42;
   m[0x20] = 0x00;
-  m[0x21] = 0x30;
+  m[0x21] = 0x30;*/
 
   /* load test code */
   /*m[load_addr++] = LDA_I;
@@ -129,7 +151,7 @@ void load_code()
 
   /* index register tests */
 
-  m[load_addr++] = LDI_I;
+  /*m[load_addr++] = LDI_I;
   m[load_addr++] = 0x00;
   m[load_addr++] = 0x10;
   m[load_addr++] = LDAI;
@@ -147,42 +169,42 @@ void load_code()
   m[load_addr++] = 0x20;
   
 
-  m[load_addr++] = HALT;
+  m[load_addr++] = HALT;*/
 
   /* JMP test */
-  m[load_addr++] = JMP;
+  /*m[load_addr++] = JMP;
   m[load_addr++] = 0x01;
-  m[load_addr++] = 0x09;
+  m[load_addr++] = 0x09;*/
 
   /* Loop test */
-  m[load_addr++] = LDA_I;
+  /*m[load_addr++] = LDA_I;
   m[load_addr++] = 0x04;
   m[load_addr++] = DEC;
   m[load_addr++] = BRNZ;
   m[load_addr++] = 0xFF;
-  m[load_addr++] = 0xFF;
+  m[load_addr++] = 0xFF;*/
 
 	
   /* IO test */
-  m[load_addr++] = LDA_I; /* 109 */
-  m[load_addr++] = 0x41;
+  /*m[load_addr++] = LDA_I; /* 109 */
+  /*m[load_addr++] = 0x41;
   m[load_addr++] = OUT;
   m[load_addr++] = LDA_I;
   m[load_addr++] = 0x42;
   m[load_addr++] = OUT;
   m[load_addr++] = LDA_I;
   m[load_addr++] = 0x43;
-  m[load_addr++] = OUT;
+  m[load_addr++] = OUT;*/
 
-  m[load_addr++] = JSR; /* 112 */
-  m[load_addr++] = 0x01;
+  /*m[load_addr++] = JSR; /* 112 */
+  /*m[load_addr++] = 0x01;
   m[load_addr++] = 0x16;
 
-  m[load_addr++] = HALT;
+  m[load_addr++] = HALT; */
 
   /* Sub routine */
-  m[load_addr++] = LDA_I; /* 116 */
-  m[load_addr++] = 0x45;
+  /*m[load_addr++] = LDA_I; /* 116 */
+  /*m[load_addr++] = 0x45;
   m[load_addr++] = OUT;
   m[load_addr++] = LDA_I;
   m[load_addr++] = 0x46;
@@ -190,7 +212,9 @@ void load_code()
   m[load_addr++] = LDA_I;
   m[load_addr++] = 0x47;
   m[load_addr++] = OUT;
-  m[load_addr++] = RET;
+  m[load_addr++] = RET;*/
+
+  
 }
 
 void set_flags(u8 old_value, u8 new_value)
@@ -222,7 +246,6 @@ void fetch_and_execute()
   u8 data;
   u16 data16;
   u16 addr;
-  u16 offset;
   u8 old_acc;
 
   u8 single_step = 1;
@@ -305,10 +328,10 @@ void fetch_and_execute()
       break;
 
     case BRNZ:
-      offset = (m[pc++] * 256) + m[pc++];
+      addr = (m[pc++] * 256) + m[pc++];
       if ((flags & ZERO_FLAG) != ZERO_FLAG)
       {
-	pc = ((pc + offset) & 0xFFFF) - 3;
+	pc = addr;
       }
 #ifdef DEBUG
       printf ("BRNZ %x\n", offset);
