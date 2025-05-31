@@ -225,6 +225,9 @@ void fetch_and_execute()
   u16 offset;
   u8 old_acc;
 
+  u8 single_step = 1;
+  char command;
+
   op = 0;
 
   while (op != HALT)
@@ -438,5 +441,15 @@ void fetch_and_execute()
 #endif
 
     perform_io();
+
+    if (single_step == 1)
+    {
+      //scanf(" %c", &command);
+      command = getchar();
+      if (command == 'r')
+      {
+	single_step = 0;
+      }
+    }
   }
 }
