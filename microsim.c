@@ -334,7 +334,7 @@ void fetch_and_execute()
 	pc = addr;
       }
 #ifdef DEBUG
-      printf ("BRNZ %x\n", offset);
+      printf ("BRNZ %x\n", addr);
 #endif
       break;
 
