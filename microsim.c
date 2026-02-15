@@ -14,6 +14,9 @@
 #define DEBUG 1
 
 // memory_cell m[MEMORY_SIZE];
+#define OUTPUT_BUFFER_SIZE 20
+char output_buffer[OUTPUT_BUFFER_SIZE];
+int output_buffer_position = 0;
 
 int main(void);
 void init(void);
@@ -249,10 +252,16 @@ void perform_io()
   /* Simulate IO */
   if (char_out != 0xFF)
   {
-    gotoxy(80, 14);
-    putchar((char)char_out);
+    if (output_buffer_position < OUTPUT_BUFFER_SIZE)
+    {
+      output_buffer[output_buffer_position] = char_out;
+      output_buffer_position++;
+    }
+    // putchar((char)char_out);
     char_out = 0xFF;
   }
+  gotoxy(80, 14);
+  printf(output_buffer);
 }
 
 void fetch_and_execute()
