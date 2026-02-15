@@ -249,6 +249,8 @@ void set_flags(u8 old_value, u8 new_value)
 
 void perform_io()
 {
+  int pos;
+  
   /* Simulate IO */
   if (char_out != 0xFF)
   {
@@ -256,6 +258,14 @@ void perform_io()
     {
       output_buffer[output_buffer_position] = char_out;
       output_buffer_position++;
+    }
+    else
+    {
+      for (pos=0; pos < (OUTPUT_BUFFER_SIZE - 1); pos++)
+      {
+	output_buffer[pos] = output_buffer[pos + 1];
+      }
+      output_buffer[OUTPUT_BUFFER_SIZE - 1] = char_out;
     }
     // putchar((char)char_out);
     char_out = 0xFF;
