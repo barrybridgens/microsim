@@ -1,6 +1,6 @@
 /* microsim_registers.h */
 
-#ifndef _MICROSIM_RIGISTERS_H
+#ifndef _MICROSIM_REGISTERS_H
 #define _MICROSIM_REGISTERS_H
 
 #include "microsim_types.h"

@@ -2,10 +2,14 @@
 
 #include <ctype.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #include "microsim_memory.h"
 #include "microsim_registers.h"
 #include "microsim_op-codes.h"
+
+#define clear() printf("\033[H\033[J")
+#define gotoxy(x,y) printf("\033[%d;%dH", (y), (x))
 
 #define DEBUG 1
 
@@ -54,23 +58,33 @@ void init()
 
 void show_registers()
 {
-  printf("    acc = %x\n", acc);
-  printf("    pc = %x\n", pc);
-  printf("    ix = %x\n", ix);
-  printf("    sp = %x\n", sp);
+  gotoxy(80, 3);
+  printf("acc = %x\n", acc);
+  gotoxy(80, 4);
+  printf("pc = %x\n", pc);
+  gotoxy(80, 5);
+  printf("ix = %x\n", ix);
+  gotoxy(80, 6);
+  printf("sp = %x\n", sp);
   if (sp != 0xFFFE)
   {
-    printf("          %x\n", m[sp+1]);
-    printf("          %x\n", m[sp+2]);
+    gotoxy(80, 7);
+    printf("     %x\n", m[sp+1]);
+    gotoxy(80, 8);
+    printf("     %x\n", m[sp+2]);
   }
-  printf("    flags = %x\n", flags);
-  printf("    char_out = %x\n", char_out);
+  gotoxy(80, 10);
+  printf("flags = %x\n", flags);
+  gotoxy(80, 12);
+  printf("char_out = %x\n", char_out);
 }
 
 void show_memory (u16 addr)
 {
   u8 data[16];
 
+  gotoxy(1, 4);
+  
   for (int byte=0; byte<16; byte++)
   {
     printf("%08x: ",(int)addr);
@@ -235,6 +249,7 @@ void perform_io()
   /* Simulate IO */
   if (char_out != 0xFF)
   {
+    gotoxy(80, 14);
     putchar((char)char_out);
     char_out = 0xFF;
   }
@@ -255,6 +270,8 @@ void fetch_and_execute()
 
   while (op != HALT)
   {
+    clear();
+    
     op = m[pc++];
 
     switch (op)
@@ -265,6 +282,7 @@ void fetch_and_execute()
       acc = data;
       set_flags(old_acc, acc);
 #ifdef DEBUG
+      gotoxy(80, 12);
       printf ("LDA_I %x\n", data);
 #endif
       break;
@@ -275,6 +293,7 @@ void fetch_and_execute()
       acc = m[addr];
       set_flags(old_acc, acc);
 #ifdef DEBUG
+      gotoxy(80, 12);
       printf ("LDA_M %x\n", addr);
 #endif
       break;
@@ -285,6 +304,7 @@ void fetch_and_execute()
       m[addr] = acc;
       set_flags(old_acc, acc);
 #ifdef DEBUG
+      gotoxy(80, 12);
       printf ("STA %x\n", addr);
 #endif
       break;
@@ -295,6 +315,7 @@ void fetch_and_execute()
       acc = acc + data;
       set_flags(old_acc, acc);
 #ifdef DEBUG
+      gotoxy(80, 12);
       printf ("ADD_I %x\n", data);
 #endif
       break;
@@ -305,6 +326,7 @@ void fetch_and_execute()
       acc = acc + m[addr];
       set_flags(old_acc, acc);
 #ifdef DEBUG
+      gotoxy(80, 12);
       printf ("ADD_M %x\n", addr);
 #endif
       break;
@@ -314,6 +336,7 @@ void fetch_and_execute()
       acc++;
       set_flags(old_acc, acc);
 #ifdef DEBUG
+      gotoxy(80, 12);
       printf ("INC\n");
 #endif
       break;
@@ -323,6 +346,7 @@ void fetch_and_execute()
       acc--;
       set_flags(old_acc, acc);
 #ifdef DEBUG
+      gotoxy(80, 12);
       printf ("DEC\n");
 #endif
       break;
@@ -334,6 +358,7 @@ void fetch_and_execute()
 	pc = addr;
       }
 #ifdef DEBUG
+      gotoxy(80, 12);
       printf ("BRNZ %x\n", addr);
 #endif
       break;
@@ -341,6 +366,7 @@ void fetch_and_execute()
     case OUT:
       char_out = acc;
 #ifdef DEBUG
+      gotoxy(80, 12);
       printf ("OUT\n");
 #endif
       break;
@@ -349,6 +375,7 @@ void fetch_and_execute()
       addr = (m[pc++] * 256) + m[pc++];
       pc = addr;
 #ifdef DEBUG
+      gotoxy(80, 12);
       printf ("JMP %x\n", addr);
 #endif
       break;
@@ -359,6 +386,7 @@ void fetch_and_execute()
       m[sp--] = pc & 0xFF;
       pc = addr;
 #ifdef DEBUG
+      gotoxy(80, 12);
       printf ("JSR %x\n", addr);
 #endif
       break;
@@ -368,6 +396,7 @@ void fetch_and_execute()
       addr = addr + (m[++sp] * 256);
       pc = addr;
 #ifdef DEBUG
+      gotoxy(80, 12);
       printf ("RET\n");
 #endif
       break;
@@ -377,6 +406,7 @@ void fetch_and_execute()
       data16 = data16 + m[pc++];
       ix = data16;
 #ifdef DEBUG
+      gotoxy(80, 12);
       printf ("LDI_I %x\n", data16);
 #endif
       break;
@@ -389,6 +419,7 @@ void fetch_and_execute()
       printf("xxxxx Data: %x\n", data16);
       ix = data16;
 #ifdef DEBUG
+      gotoxy(80, 12);
       printf ("LDI_M - %x\n", addr);
 #endif
       break;
@@ -396,6 +427,7 @@ void fetch_and_execute()
     case INCI:
       ix++;
 #ifdef DEBUG
+      gotoxy(80, 12);
       printf ("INCI\n");
 #endif
       break;
@@ -403,6 +435,7 @@ void fetch_and_execute()
     case DECI:
       ix--;
 #ifdef DEBUG
+      gotoxy(80, 12);
       printf ("DECI\n");
 #endif
       break;
@@ -412,6 +445,7 @@ void fetch_and_execute()
       acc = m[ix];
       set_flags(old_acc, acc);
 #ifdef DEBUG
+      gotoxy(80, 12);
       printf ("LDAI\n");
 #endif
       break;
@@ -422,6 +456,7 @@ void fetch_and_execute()
       acc = m[ix + data];
       set_flags(old_acc, acc);
 #ifdef DEBUG
+      gotoxy(80, 12);
       printf ("LDAI\n");
 #endif
       break;
@@ -432,6 +467,7 @@ void fetch_and_execute()
       m[addr] = acc;
       set_flags(old_acc, acc);
 #ifdef DEBUG
+      gotoxy(80, 12);
       printf ("STAI \n");
 #endif
       break;
@@ -443,12 +479,14 @@ void fetch_and_execute()
       m[addr] = acc;
       set_flags(old_acc, acc);
 #ifdef DEBUG
+      gotoxy(80, 12);
       printf ("STAI \n");
 #endif
       break;
       
     case HALT:
 #ifdef DEBUG
+      gotoxy(80, 12);
       printf("*** HALT ***\n");
 #endif
       break;
